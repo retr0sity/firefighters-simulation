@@ -1,13 +1,13 @@
 globals [
   base-x base-y
-  wind-direction    ; 0=no wind, 1=north, 2=east, 3=south, 4=west
+  wind-direction    ; 0=katholou aeras, 1=north, 2=east, 3=south, 4=west (it doesnt work properly) :)
   total-trees
   trees-burned
   trees-saved
   fires-detected
   water-used
   simulation-time
-  simulation-ended?  ; New variable to track if simulation has ended
+  simulation-ended?  ; an h prosomoiwsh teleiwse
 ]
 
 breed [scouters scouter]
@@ -47,13 +47,12 @@ patches-own [
   is-base?
 ]
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; SETUP
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; SETUP
+
 to setup
   clear-all
 
-  ; Initialize globals
   set base-x 0
   set base-y 0
   set total-trees 0
@@ -62,31 +61,30 @@ to setup
   set fires-detected 0
   set water-used 0
   set simulation-time 0
-  set simulation-ended? false  ; Initialize simulation state
+  set simulation-ended? false  ; den exei teleiwsei akoma
 
-  ; Set wind direction (assumed wind-setting is a slider or input)
+  ; set wind direction
   set wind-direction wind-setting
 
-  ; Create base at center
+  ; ftiaxnoyme tin vash sto kentro
   ask patch base-x base-y [
     set pcolor brown
     set is-base? true
   ]
 
-  ; Generate forest
   generate-forest
 
-  ; Create scouters
+  ; scouters
   create-scouters num-scouters [
     set color blue
     set size 1.5
-    set shape "person"  ; Changed shape to represent human scouts
+    set shape "person"  ; scouts einai anthrwpoi
     set detection-radius scouter-detection-radius
     set speed scouter-speed
     set patrolling? true
     set target-fire nobody
 
-    ; Position randomly but not on base
+    ; vale dentra pantou ektos aptin vash
     let valid-position false
     while [not valid-position] [
       setxy random-xcor random-ycor
@@ -96,11 +94,11 @@ to setup
     ]
   ]
 
-  ; Create ground units
+  ; ground units
   create-ground-units num-ground-units [
     set color red
     set size 2
-    set shape "truck"  ; Changed shape to distinguish from trees
+    set shape "truck"  ; purosvestika oxhmata
     set water-capacity max-water-capacity
     set current-water max-water-capacity
     set speed ground-unit-speed
@@ -108,11 +106,11 @@ to setup
     set extinguishing? false
     set target-fire nobody
 
-    ; Start at base
+    ; ksekina apth vash
     setxy base-x base-y
   ]
 
-  ; Start initial fires if requested
+  ; ksekina tis prwtes fwties
   if initial-fires > 0 [
     repeat initial-fires [
       start-random-fire
@@ -122,9 +120,8 @@ to setup
   reset-ticks
 end
 
-;; Add this function to your code
-to cleanup-orphaned-fires
-  ;; Remove fire markers that no longer have burning trees
+to cleanup-extinguished-fires
+  ; einai gia na svinoun ta markers tou report tis fwtias afou svisoun
   ask fires [
     let fire-patch patch-here
     let has-burning-trees false
@@ -134,27 +131,27 @@ to cleanup-orphaned-fires
       ]
     ]
     if not has-burning-trees [
-      ;; Clear this fire from any ground units targeting it
+      ; teleiwse h fwtia, stamata na tin kaneis target
       ask ground-units with [target-fire = myself] [
         set target-fire nobody
         set extinguishing? false
       ]
-      die  ;; Remove the fire marker
+      die  ; diwxnoume to fire marker
     ]
   ]
 end
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; GENERATE FOREST
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; GENERATE FOREST
+
 to generate-forest
   ask patches [
     if random 100 < forest-density and (is-base? != false) [
       sprout-trees 1 [
         set color green
-        set size 1.2  ; Made trees slightly larger
-        set shape "tree"  ; Set tree shape to built-in tree shape
+        set size 1.2  ; megalytera dentra gia na fainontai
+        set shape "tree"  ; ta kanoume dentra
         set tree-state 0
         set burn-time 0
         set max-burn-time burn-duration
@@ -164,59 +161,59 @@ to generate-forest
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; GO
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; GO
+
 to go
-  ; Check if simulation should end
+  ; an teleiwsei
   if check-simulation-end [
-    stop  ; This will end the simulation
+    stop  ; telos
   ]
 
   if not any? fires and not any? trees with [tree-state = 1 or tree-state = 2] [
     if auto-start-fires [
-      ;; Randomly start new fires
+      ; ksekina fwties
       if random 1000 < fire-start-probability * 10 [
         start-random-fire
       ]
     ]
   ]
 
-  ;; Update simulation time
+  ; update simulation time
   set simulation-time simulation-time + 1
 
-  ;; Agent behaviors
+  ; trekse tous agents sto go
   ask scouters [ scouter-behavior ]
   ask ground-units [ ground-unit-behavior ]
 
-  ;; Fire dynamics
+  ; update tin fwtia
   ask trees with [ tree-state = 1 or tree-state = 2 ] [ update-fire ]
   spread-fires
 
-  cleanup-orphaned-fires
+  cleanup-extinguished-fires
 
-  ;; Update displays
+  ; update ta dentra kai ta statistics
   update-tree-colors
   update-info-display
 
   tick
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; CHECK SIMULATION END
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; CHECK SIMULATION END
+
 to-report check-simulation-end
-  ; Check if there are no burning trees (state 1 or 2)
+  ; tsekare an kaigontai akoma dentra (state 1 or 2)
   let burning-trees count trees with [tree-state = 1 or tree-state = 2]
 
-  ; End simulation when no trees are burning, regardless of fire markers or auto-start setting
+  ; telos an den kaigontai
   if burning-trees = 0 and not simulation-ended? [
     set simulation-ended? true
 
-    ; Clean up any remaining fire markers
+    ; katharisma fire markers
     ask fires [ die ]
 
-    ; Calculate final statistics
+    ; telika statistics gia report
     let healthy-trees count trees with [tree-state = 0 or tree-state = 3]
     let total-burned count trees with [tree-state = 4]
     let survival-rate 0
@@ -225,17 +222,17 @@ to-report check-simulation-end
       set survival-rate (healthy-trees / total-trees) * 100
     ]
 
-    ; Display end message
-    user-message (word "SIMULATION ENDED!\n\n"
-                      "Final Statistics:\n"
-                      "Total Trees: " total-trees "\n"
-                      "Trees Burned: " total-burned "\n"
-                      "Trees Saved/Healthy: " healthy-trees "\n"
-                      "Tree Survival Rate: " precision survival-rate 1 "%\n"
-                      "Fires Detected: " fires-detected "\n"
-                      "Water Used: " water-used " units\n"
-                      "Simulation Time: " simulation-time " ticks\n\n"
-                      "All fires have been extinguished or burned out!")
+    ; ta-da!
+    user-message (word "Τέλος προσομοίωσης!\n\n"
+                      "Στατιστικά:\n"
+                      "Συνολικά δέντρα: " total-trees "\n"
+                      "Δέντρα που κάηκαν: " total-burned "\n"
+                      "Δέντρα που σώθηκαν/έμειναν απείραχτα: " healthy-trees "\n"
+                      "Ποσοστό του δάσους που σώθηκε (Survival rate): " precision survival-rate 1 "%\n"
+                      "Φωτιές που εντοπίστηκαν: " fires-detected "\n"
+                      "Νερό που χρησιμοποιήθηκε: " water-used " units\n"
+                      "Χρόνος προσομοίωσης: " simulation-time " ticks\n\n"
+                      )
 
     report true
   ]
@@ -243,39 +240,35 @@ to-report check-simulation-end
   report false
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; IMPROVED GROUND-UNIT BEHAVIOR
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; IMPROVED GROUND-UNIT BEHAVIOR - FOCUSED TREE TARGETING
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; GROUND-UNIT BEHAVIOR
+
 to ground-unit-behavior
-  ;; 1) If out of water, head back to base (but remember our fire location)
+  ; 1) an teleiwsei to nero efuges gia vash
   if current-water <= 0 and not returning-to-base? [
     set returning-to-base? true
     set extinguishing? false
-    ;; Keep target-fire so we can return to it after refilling
+    ;; keep target-fire gia na tin svisoume otan valoume nero
   ]
 
-  ;; 2) RETURN-TO-BASE behavior
+  ; 2) RETURN-TO-BASE
   if returning-to-base? [
     face patch base-x base-y
     forward speed
 
-    ;; Refill at base
+    ; refill
     if distance patch base-x base-y < 1.5 [
       set current-water water-capacity
       set returning-to-base? false
-      ;; Don't clear target-fire - we'll return to finish the job
     ]
     stop
   ]
 
-  ;; 3) If we have a fire to fight, work on it systematically
+  ; 3) exoume fwtia, pame na tin svisoume
   ifelse target-fire != nobody [
-    ;; Check if our target fire still exists
+    ; uparxei akoma h fwtia?
     ifelse member? target-fire fires [
-      ;; Check if there are still burning trees at target location
+      ; tsekare an exei flegomena dentra ekei sto target fire
       let target-patch [patch-here] of target-fire
       let burning-trees-at-target nobody
       ask target-patch [
@@ -283,30 +276,30 @@ to ground-unit-behavior
       ]
 
       ifelse any? burning-trees-at-target [
-        ;; Move to the fire location first
+        ; phgaine sta burning trees
         face target-fire
         let dist distance target-fire
 
-        ;; If close enough to work on the fire
+        ; an eisai konta svise
         ifelse dist <= 1.5 [
           set extinguishing? true
 
           if current-water > 0 [
-            ;; FOCUS: Find the closest burning tree to our current position
+            ; vres to kontinotero tree apo ta burning trees ekei
             let closest-burning-tree min-one-of burning-trees-at-target [distance myself]
 
             if closest-burning-tree != nobody [
-              ;; Move towards the closest burning tree if we're not right next to it
+              ; phgaine sto kontinotero burning tree an den eisai ekei
               let tree-distance distance closest-burning-tree
               if tree-distance > 0.5 [
                 face closest-burning-tree
                 forward min(list speed tree-distance)
               ]
 
-              ;; Extinguish the closest tree if we're close enough
+              ; svise to closest
               if tree-distance <= 1.0 [
                 ask closest-burning-tree [
-                  set tree-state 3  ;; extinguished
+                  set tree-state 3  ;; svistike
                   set trees-saved trees-saved + 1
                 ]
                 set current-water current-water - 1
@@ -315,33 +308,33 @@ to ground-unit-behavior
             ]
           ]
         ] [
-          ;; Move toward the fire location
+          ; phgaine sth fwtia me to analogo speed
           forward speed
         ]
       ] [
-        ;; No more burning trees at this location - fire is completely out
-        ask target-fire [ die ]  ;; Remove fire marker
+        ; esvisan oi fwties edw
+        ask target-fire [ die ]  ;; remove fire marker
         set target-fire nobody
         set extinguishing? false
       ]
     ] [
-      ;; Target fire no longer exists - clear target
+      ; exei hdh svisei h fwtia - fuge
       set target-fire nobody
       set extinguishing? false
     ]
 
   ] [
-    ;; 4) Look for new fires only if we don't have a target
+    ; 4) koita gia kainourgies fwties an den exeis target
     let available-fires fires with [
-      ;; Only target fires that actually have burning trees
+      ; target fwties pou exoun burning trees
       any? [trees-here with [tree-state = 1 or tree-state = 2]] of patch-here
     ]
 
     ifelse any? available-fires [
-      ;; Pick the closest fire and COMMIT to it
+      ; vres tin kontinoterh fwtia
       set target-fire min-one-of available-fires [distance myself]
     ] [
-      ;; No fires available - return to base
+      ;;den vlepw fwtia - paw pisw sti vash
       face patch base-x base-y
       let dist-to-base distance patch base-x base-y
       if dist-to-base > 1.5 [
@@ -545,15 +538,6 @@ to-report fire-efficiency
   report 0
 end
 
-to-report area-coverage
-  let scouter-coverage 0
-  ask scouters [
-    set scouter-coverage scouter-coverage + (detection-radius * detection-radius * 3.14159)
-  ]
-  let total-area world-width * world-height
-  report (scouter-coverage / total-area) * 100
-end
-
 to-report average-response-time
   let total-distance 0
   let fire-count 0
@@ -571,13 +555,13 @@ to-report average-response-time
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-647
-448
+277
+2
+664
+390
 -1
 -1
-13.0
+11.5
 1
 10
 1
@@ -598,20 +582,20 @@ ticks
 30.0
 
 CHOOSER
-22
-22
-160
-67
+54
+531
+192
+576
 wind-setting
 wind-setting
 0 "north" "south" "east" "west"
 0
 
 SLIDER
-25
-102
-197
-135
+37
+12
+204
+45
 num-scouters
 num-scouters
 0
@@ -623,10 +607,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-28
-150
-214
-183
+30
+88
+216
+121
 scouter-detection-radius
 scouter-detection-radius
 0
@@ -638,10 +622,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-32
-194
-204
-227
+35
+126
+207
+159
 scouter-speed
 scouter-speed
 0
@@ -653,10 +637,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-39
-284
-211
-317
+35
+52
+207
+85
 num-ground-units
 num-ground-units
 0
@@ -669,9 +653,9 @@ HORIZONTAL
 
 SLIDER
 39
-337
-211
 370
+211
+403
 max-water-capacity
 max-water-capacity
 0
@@ -683,10 +667,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-41
-391
-213
-424
+35
+167
+207
+200
 ground-unit-speed
 ground-unit-speed
 0
@@ -698,10 +682,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-38
-432
-210
-465
+35
+248
+207
+281
 initial-fires
 initial-fires
 0
@@ -713,10 +697,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-39
+35
+208
+207
 241
-211
-274
 forest-density
 forest-density
 0
@@ -728,10 +712,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-45
-498
-217
-531
+35
+289
+207
+322
 forest-duration
 forest-duration
 0
@@ -743,10 +727,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-51
-558
-223
-591
+35
+330
+207
+363
 burn-duration
 burn-duration
 0
@@ -758,10 +742,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-53
-678
-225
-711
+37
+409
+209
+442
 fire-start-probability
 fire-start-probability
 0
@@ -773,10 +757,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-293
-557
-465
-590
+37
+449
+209
+482
 fire-spread-rate
 fire-spread-rate
 0
@@ -788,10 +772,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-87
-603
-228
-636
+52
+490
+193
+523
 auto-start-fires
 auto-start-fires
 0
@@ -799,10 +783,10 @@ auto-start-fires
 -1000
 
 BUTTON
-246
-460
-309
-493
+358
+397
+421
+430
 NIL
 setup
 NIL
@@ -816,10 +800,10 @@ NIL
 1
 
 BUTTON
-325
-460
-388
-493
+505
+397
+568
+430
 NIL
 go
 T
@@ -837,7 +821,7 @@ MONITOR
 19
 822
 64
-ticks prosomoiwshs
+Ticks προσομοίωσης
 simulation-time
 17
 1
@@ -863,6 +847,28 @@ PENS
 "pen-1" 1.0 0 -2674135 true "" "plot count trees with [tree-state = 1 or tree-state = 2]"
 "pen-2" 1.0 0 -1184463 true "" "plot count trees with [tree-state = 3]"
 "pen-3" 1.0 0 -16777216 true "" "plot count trees with [tree-state = 4]"
+
+MONITOR
+688
+256
+830
+301
+Απόδοση 199
+fire-efficiency
+17
+1
+11
+
+MONITOR
+689
+315
+1045
+360
+Μέσος όρος απόστασης για ανταπόκριση από ground unit (sec)
+average-response-time
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
