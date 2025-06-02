@@ -350,54 +350,54 @@ to scouter-behavior
   ; sto detection radius tsekare gia fwties
   let nearby-burning-trees trees with [ tree-state = 1 or tree-state = 2 ] in-radius detection-radius
 
-  ;; If burning trees detected and not already targeting a fire here
+  ; an deis burning trees kai den exeis target
   if any? nearby-burning-trees and target-fire = nobody [
     let burning-tree one-of nearby-burning-trees
     let fire-location [patch-here] of burning-tree
 
-    ;; Check if there's already a fire marker at this location
+    ; check an exei fire marker at this location
     let existing-fire one-of fires-on fire-location
 
     ifelse existing-fire != nobody [
       set target-fire existing-fire
     ] [
-      ;; Create new fire marker
+      ; kainourgio fire marker
       let new-fire nobody
       ask fire-location [
         sprout-fires 1 [
           set color orange
           set size 1.0
-          set shape "circle"  ; Changed to circle shape for fire detection marker
+          set shape "circle"  ; circle gia fire marker
           set intensity 1
           set detected? true
           set fires-detected fires-detected + 1
-          set new-fire self  ;; store reference to this new fire
+          set new-fire self  ; to reference tou fire
         ]
       ]
-      ;; Set the new fire as target
+      ; to kainourgio target
       set target-fire new-fire
     ]
 
     set patrolling? false
 
-    ;; Alert available ground units
+    ; steile shma se kontino ground unit
     ask ground-units with [target-fire = nobody and not returning-to-base?] [
       set target-fire [target-fire] of myself
     ]
   ]
 
-  ;; Movement behavior
+  ; movement tou scouter
   ifelse patrolling? [
-    ;; Random patrol movement
+    ; random movement
     rt (random 60) - 30
     forward speed
 
-    ;; Avoid edges
+    ; avoid edges (gia oxi wrapped)
     if abs xcor > world-width / 2 - 2 or abs ycor > world-height / 2 - 2 [
       face patch 0 0
     ]
   ] [
-    ;; Monitor target fire
+    ; monitor to fire target
     if target-fire != nobody [
       let target-patch [patch-here] of target-fire
       let still-burning? false
@@ -408,13 +408,13 @@ to scouter-behavior
       ]
 
       ifelse still-burning? [
-        ;; Stay near the fire to monitor
+        ; meine konta sti fwtia
         face target-fire
         if distance target-fire > 2 [
           forward speed
         ]
       ] [
-        ;; Fire is out, resume patrolling
+        ; esvise h fwtia, sunexise to patrol
         set target-fire nobody
         set patrolling? true
       ]
@@ -422,33 +422,33 @@ to scouter-behavior
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; UPDATE FIRE (unchanged)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; UPDATE FIRE
+
 to update-fire
   set burn-time burn-time + 1
 
-  ;; Transition from burning to burning-long
+  ; apo burning se burning polu wra (se sxesh me to burn-time)
   if burn-time >= max-burn-time / 2 and tree-state = 1 [
     set tree-state 2
   ]
 
-  ;; Tree burns out completely
+  ; to dentro kaigetai teleiws (se sxesh me to max-burn-time)
   if burn-time >= max-burn-time [
     set tree-state 4
     set trees-burned trees-burned + 1
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; SPREAD FIRES (unchanged as far as patch-ahead)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; SPREAD FIRES
+
 to spread-fires
   ask trees with [ tree-state = 1 or tree-state = 2 ] [
     if random 100 < fire-spread-rate [
       let spread-candidates neighbors with [ any? trees-here with [ tree-state = 0 ] ]
 
-      ;; Apply wind effects
+      ;; wind effects (pou den douleuoun for some reason:( )
       if wind-direction != 0 [
         if wind-direction = 1 [ ;; North wind
           set spread-candidates spread-candidates with [ pycor > [ pycor ] of myself ]
@@ -476,23 +476,22 @@ to spread-fires
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; START RANDOM FIRE (updated to not create fire agents automatically)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; START RANDOM FIRE
+
 to start-random-fire
   let potential-trees trees with [ tree-state = 0 ]
   if any? potential-trees [
     ask one-of potential-trees [
       set tree-state 1
       set burn-time 0
-      ; Fire agents are now only created when detected by scouters
     ]
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; UPDATE TREE COLORS (unchanged)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; UPDATE TREE COLORS
+
 to update-tree-colors
   ask trees [
     if tree-state = 0 [ set color green ]
@@ -503,33 +502,16 @@ to update-tree-colors
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; UPDATE INFO DISPLAY (stub)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; UPDATE INFO DISPLAY
+
 to update-info-display
 
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; MANUAL FIRE STARTING (updated to not create fire agents automatically)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-to start-fire-at-mouse
-  if mouse-down? [
-    ask patch mouse-xcor mouse-ycor [
-      if any? trees-here with [ tree-state = 0 ] [
-        ask trees-here with [ tree-state = 0 ] [
-          set tree-state 1
-          set burn-time 0
-          ; Fire agents are now only created when detected by scouters
-        ]
-      ]
-    ]
-  ]
-end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; REPORTS (unchanged)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; REPORTS
+
 to-report fire-efficiency
   if fires-detected > 0 [
     report trees-saved / fires-detected
@@ -872,31 +854,116 @@ average-response-time
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+Αυτή η προσομοίωση μοντελοποιεί ένα σύστημα εντοπισμού και κατάσβεσης δασικών πυρκαγιών χρησιμοποιώντας αυτόνομες μονάδες περιπολίας και επίγειες πυροσβεστικές μονάδες. Το μοντέλο παρουσιάζει πώς οι συντονισμένες ομάδες έκτακτης ανάγκης μπορούν να εντοπίσουν τις φωτιές νωρίς και να τις καταστείλουν προτού εξαπλωθούν εκτενώς στο δάσος.
+Η προσομοίωση περιλαμβάνει:
+
+Scouters (μπλε φιγούρες): Μονάδες εντοπισμού που περιπολούν το δάσος και εντοπίζουν φωτιές
+Ground Units (κόκκινα φορτηγά): Πυροσβεστικά οχήματα που σβήνουν φωτιές χρησιμοποιώντας νερό
+Δέντρα: Δασική βλάστηση που μπορεί να καεί, να σωθεί, ή να παραμείνει υγιής
+Φωτιές: Δυναμική εξάπλωση φωτιάς που επηρεάζεται από περιβαλλοντικές συνθήκες
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+Scouters (Μονάδες Εντοπισμού)
+
+Περιπολούν το δάσος τυχαία όταν δεν ανταποκρίνονται σε φωτιές
+Έχουν ακτίνα εντοπισμού για να εντοπίζουν καιόμενα δέντρα
+Δημιουργούν δείκτες φωτιάς όταν εντοπίζονται πυρκαγιές
+Ειδοποιούν κοντινές επίγειες μονάδες να ανταποκριθούν σε εντοπισμένες φωτιές
+Παρακολουθούν τις φωτιές μέχρι να σβήσουν
+
+Ground Units (Πυροσβεστικά Οχήματα)
+
+Ξεκινούν από τη βάση (καφέ τετράγωνο στο κέντρο) με πλήρη χωρητικότητα νερού
+Ανταποκρίνονται σε συναγερμούς φωτιάς από τα περιπολικά
+Σβήνουν φωτιές στοχευόμενα καιόμενα δέντρα
+Επιστρέφουν αυτόματα στη βάση όταν το νερό τελειώνει
+Ανεφοδιάζονται με νερό στη βάση πριν επιστρέψουν στη δουλειά
+
+Δέντρα (Δασική Βλάστηση)
+
+Έχουν πέντε καταστάσεις:
+
+Υγιή (πράσινα): Κανονικά, μη καμένα δέντρα
+Καίγονται (κόκκινα): Δέντρα που μόλις πήραν φωτιά
+Καίγονται Πολλή Ώρα (σκούρο κόκκινα): Δέντρα που καίγονται για αρκετή ώρα
+Σβησμένα (κίτρινα): Δέντρα που σώθηκαν από πυροσβεστικές προσπάθειες
+Καμένα (μαύρα): Δέντρα που καταστράφηκαν τελείως από τη φωτιά
+
+Μηχανισμός Φωτιάς
+
+Οι φωτιές εξαπλώνονται σε γειτονικά υγιή δέντρα βάσει του ρυθμού εξάπλωσης
+Η κατεύθυνση του ανέμου επηρεάζει τα μοτίβα εξάπλωσης (όταν είναι ενεργοποιημένη)
+Τα δέντρα έχουν μέγιστο χρόνο καύσης πριν καταστραφούν τελείως
+Οι φωτιές δημιουργούν ορατούς δείκτες (πορτοκαλί κύκλους) όταν εντοπίζονται
+
+Ροή Προσομοίωσης
+
+-Φάση Προετοιμασίας: Το δάσος δημιουργείται, οι μονάδες τοποθετούνται, μπορεί να ξεκινήσουν αρχικές φωτιές
+-Φάση Εντοπισμού: Τα περιπολικά περιπολούν και εντοπίζουν φωτιές, δημιουργώντας δείκτες φωτιάς
+-Φάση Ανταπόκρισης: Οι επίγειες μονάδες ανταποκρίνονται σε εντοπισμένες φωτιές
+-Φάση Κατάσβεσης: Οι επίγειες μονάδες σβήνουν καιόμενα δέντρα χρησιμοποιώντας νερό
+-Φάση Εξάπλωσης: Οι ανεξέλεγκτες φωτιές συνεχίζουν να εξαπλώνονται σε γειτονικά δέντρα
+-Φάση Ανάκαμψης: Οι μονάδες επιστρέφουν στη βάση για ανεφοδιασμό όταν χρειάζεται
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+Παράμετροι Προετοιμασίας
+Παράμετροι Δάσους:
+
+forest-density: Ποσοστό τετραγώνων που περιέχουν δέντρα (0-100%)
+burn-duration: Πόσο καιρό καίγονται τα δέντρα πριν καταστραφούν τελείως
+
+Παράμετροι Φωτιάς:
+
+initial-fires: Αριθμός φωτιών για να ξεκινήσει η προσομοίωση
+fire-spread-rate: Πιθανότητα εξάπλωσης φωτιάς σε γειτονικά δέντρα κάθε tick (0-100%)
+auto-start-fires: Αν νέες φωτιές ξεκινούν αυτόματα κατά τη διάρκεια της προσομοίωσης
+fire-start-probability: Πιθανότητα έναρξης νέων φωτιών (όταν το auto-start είναι ενεργοποιημένο)
+wind-setting: Κατεύθυνση ανέμου που επηρεάζει την εξάπλωση φωτιάς (0=καθόλου άερας, 1=βόρειος, 2=ανατολικός, 3=νότιος, 4=δυτικός)
+
+Παράμετροι Scouters:
+
+num-scouters: Αριθμός μονάδων εντοπισμού στην προσομοίωση
+scouter-detection-radius: Πόσο μακριά μπορούν να εντοπίσουν φωτιές τα περιπολικά
+scouter-speed: Ταχύτητα κίνησης των περιπολικών
+
+Παράμετροι Ground units:
+
+num-ground-units: Αριθμός πυροσβεστικών οχημάτων
+max-water-capacity: Χωρητικότητα νερού κάθε επίγειας μονάδας
+ground-unit-speed: Ταχύτητα κίνησης των επίγειων μονάδων
+
+## HOW TO RUN IT
+
+Setup: Κάντε κλικ στο κουμπί "Setup" για να αρχικοποιήσετε την προσομοίωση με τις παραμέτρους που επιλέξατε
+Go: Κάντε κλικ στο "Go" για να τρέξετε την προσομοίωση βήμα-βήμα, ή "Go Forever" για συνεχή εκτέλεση
+Παρακολούθηση: Παρακολουθήστε τα στατιστικά και παρατηρήστε τις συμπεριφορές των πρακτόρων
+Επαναφορά: Κάντε κλικ στο "Setup" ξανά για να επανεκκινήσετε με νέες παραμέτρους
 
 ## THINGS TO NOTICE
 
-(suggested things for the user to notice while running the model)
+Αποδοτικότητα Εντοπισμού: Πόσο γρήγορα τα περιπολικά εντοπίζουν νέες φωτιές επηρεάζει τη συνολική επιτυχία
+Συντονισμός Ανταπόκρισης: Οι επίγειες μονάδες ανταποκρίνονται αυτόματα σε συναγερμούς περιπολικών
+Διαχείριση Πόρων: Οι επίγειες μονάδες πρέπει να ισορροπήσουν την πυρόσβεση με τα ταξίδια ανεφοδιασμού
+Μοτίβα Εξάπλωσης Φωτιάς: Παρατηρήστε πώς οι φωτιές εξαπλώνονται διαφορετικά με διάφορες συνθήκες ανέμου
+Μετρικές Επιτυχίας: Η προσομοίωση παρέχει μια ολοκληρωμένη αναφορά στο τέλος
 
 ## THINGS TO TRY
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
-
-## EXTENDING THE MODEL
-
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+Ποικιλία Αριθμών Μονάδων: Δοκιμάστε διαφορετικούς συνδυασμούς περιπολικών και επίγειων μονάδων
+Προσαρμογή Εμβέλειας Εντοπισμού: Δείτε πώς η ακτίνα εντοπισμού των περιπολικών επηρεάζει την έγκαιρη προειδοποίηση
+Δοκιμή Συνθηκών Φωτιάς: Πειραματιστείτε με διαφορετικούς ρυθμούς εξάπλωσης και κατευθύνσεις ανέμου
+Κατανομή Πόρων: Συγκρίνετε την αποτελεσματικότητα με διαφορετικές χωρητικότητες νερού
+Πυκνότητα Δάσους: Δοκιμάστε πώς η πυκνότητα του δάσους επηρεάζει την εξάπλωση και κατάσβεση φωτιάς
 
 ## NETLOGO FEATURES
 
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
+Πολλαπλοί agents: Διαφορετικοί τύποι πρακτόρων με μοναδικές συμπεριφορές
+Καταστάσεις Patches: Περιβαλλοντικές συνθήκες και τοποθεσίες βάσης
+Επικοινωνία agents: Συντονισμός μεταξύ διαφορετικών τύπων μονάδων
+Δυναμική Προσομοίωση: Αλλαγές χρωμάτων σε πραγματικό χρόνο που δείχνουν καταστάσεις συστήματος
+Στατιστική Αναφορά: Ολοκληρωμένες μετρικές απόδοσης
 
 ## RELATED MODELS
 
