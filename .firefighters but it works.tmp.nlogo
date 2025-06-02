@@ -350,54 +350,54 @@ to scouter-behavior
   ; sto detection radius tsekare gia fwties
   let nearby-burning-trees trees with [ tree-state = 1 or tree-state = 2 ] in-radius detection-radius
 
-  ;; If burning trees detected and not already targeting a fire here
+  ; an deis burning trees kai den exeis target
   if any? nearby-burning-trees and target-fire = nobody [
     let burning-tree one-of nearby-burning-trees
     let fire-location [patch-here] of burning-tree
 
-    ;; Check if there's already a fire marker at this location
+    ; check an exei fire marker at this location
     let existing-fire one-of fires-on fire-location
 
     ifelse existing-fire != nobody [
       set target-fire existing-fire
     ] [
-      ;; Create new fire marker
+      ; kainourgio fire marker
       let new-fire nobody
       ask fire-location [
         sprout-fires 1 [
           set color orange
           set size 1.0
-          set shape "circle"  ; Changed to circle shape for fire detection marker
+          set shape "circle"  ; circle gia fire marker
           set intensity 1
           set detected? true
           set fires-detected fires-detected + 1
-          set new-fire self  ;; store reference to this new fire
+          set new-fire self  ; to reference tou fire
         ]
       ]
-      ;; Set the new fire as target
+      ; to kainourgio target
       set target-fire new-fire
     ]
 
     set patrolling? false
 
-    ;; Alert available ground units
+    ; steile shma se kontino ground unit
     ask ground-units with [target-fire = nobody and not returning-to-base?] [
       set target-fire [target-fire] of myself
     ]
   ]
 
-  ;; Movement behavior
+  ; movement tou scouter
   ifelse patrolling? [
-    ;; Random patrol movement
+    ; random movement
     rt (random 60) - 30
     forward speed
 
-    ;; Avoid edges
+    ; avoid edges (gia oxi wrapped)
     if abs xcor > world-width / 2 - 2 or abs ycor > world-height / 2 - 2 [
       face patch 0 0
     ]
   ] [
-    ;; Monitor target fire
+    ; monitor to fire target
     if target-fire != nobody [
       let target-patch [patch-here] of target-fire
       let still-burning? false
@@ -408,13 +408,13 @@ to scouter-behavior
       ]
 
       ifelse still-burning? [
-        ;; Stay near the fire to monitor
+        ; meine konta sti fwtia
         face target-fire
         if distance target-fire > 2 [
           forward speed
         ]
       ] [
-        ;; Fire is out, resume patrolling
+        ; esvise h fwtia, sunexise to patrol
         set target-fire nobody
         set patrolling? true
       ]
@@ -422,33 +422,33 @@ to scouter-behavior
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; UPDATE FIRE (unchanged)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; UPDATE FIRE
+
 to update-fire
   set burn-time burn-time + 1
 
-  ;; Transition from burning to burning-long
+  ; apo burning se burning polu wra (se sxesh me to burn-time)
   if burn-time >= max-burn-time / 2 and tree-state = 1 [
     set tree-state 2
   ]
 
-  ;; Tree burns out completely
+  ; to dentro kaigetai teleiws (se sxesh me to max-burn-time)
   if burn-time >= max-burn-time [
     set tree-state 4
     set trees-burned trees-burned + 1
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; SPREAD FIRES (unchanged as far as patch-ahead)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; SPREAD FIRES
+
 to spread-fires
   ask trees with [ tree-state = 1 or tree-state = 2 ] [
     if random 100 < fire-spread-rate [
       let spread-candidates neighbors with [ any? trees-here with [ tree-state = 0 ] ]
 
-      ;; Apply wind effects
+      ;; wind effects (pou den douleuoun for some reason:( )
       if wind-direction != 0 [
         if wind-direction = 1 [ ;; North wind
           set spread-candidates spread-candidates with [ pycor > [ pycor ] of myself ]
@@ -476,23 +476,22 @@ to spread-fires
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; START RANDOM FIRE (updated to not create fire agents automatically)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; START RANDOM FIRE
+
 to start-random-fire
   let potential-trees trees with [ tree-state = 0 ]
   if any? potential-trees [
     ask one-of potential-trees [
       set tree-state 1
       set burn-time 0
-      ; Fire agents are now only created when detected by scouters
     ]
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; UPDATE TREE COLORS (unchanged)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; UPDATE TREE COLORS
+
 to update-tree-colors
   ask trees [
     if tree-state = 0 [ set color green ]
@@ -503,29 +502,14 @@ to update-tree-colors
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; UPDATE INFO DISPLAY (stub)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; UPDATE INFO DISPLAY
+
 to update-info-display
 
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; MANUAL FIRE STARTING (updated to not create fire agents automatically)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-to start-fire-at-mouse
-  if mouse-down? [
-    ask patch mouse-xcor mouse-ycor [
-      if any? trees-here with [ tree-state = 0 ] [
-        ask trees-here with [ tree-state = 0 ] [
-          set tree-state 1
-          set burn-time 0
-          ; Fire agents are now only created when detected by scouters
-        ]
-      ]
-    ]
-  ]
-end
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; REPORTS (unchanged)
