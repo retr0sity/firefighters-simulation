@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wildfire Firefighting Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d1810 50%, #1a1a1a 100%);
+            color: #f0f0f0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #ff4500, #ff8c00);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(255, 69, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .canvas-container {
+            text-align: center;
+        }
+
+        canvas {
+            background: #1a4d1a;
+            border: 3px solid #ff4500;
+            border-radius: 10px;
+            cursor: crosshair;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ff8c00;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #333;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ff4500;
+            cursor: pointer;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 5px;
+        }
+
+        .value-display {
+            float: right;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-setup {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-go {
+            background: linear-gradient(135deg, #ff4500, #ff8c00);
+            color: white;
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #f44336, #da190b);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stat-box {
+            background: rgba(255, 140, 0, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #ff4500;
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        .stat-value {
+            color: #4CAF50;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .legend {
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        h3 {
+            color: #ff8c00;
+            margin: 20px 0 10px 0;
+            font-size: 1.3em;
+        }
+
+        @media (max-width: 1400px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚒 Wildfire Firefighting Simulation 🔥</h1>
+            <p>Interactive Multi-Agent Forest Fire Suppression System</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Left Panel: Controls -->
+            <div class="panel">
+                <h3>🎮 Setup Controls</h3>
+                
+                <div class="control-group">
+                    <label>Scouters: <span class="value-display" id="val-scouters">6</span></label>
+                    <input type="range" id="num-scouters" min="0" max="20" value="6">
+                </div>
+
+                <div class="control-group">
+                    <label>Scouter Detection Radius: <span class="value-display" id="val-detection">60</span></label>
+                    <input type="range" id="scouter-detection" min="20" max="150" value="60">
+                </div>
+
+                <div class="control-group">
+                    <label>Scouter Speed: <span class="value-display" id="val-scout-speed">3</span></label>
+                    <input type="range" id="scouter-speed" min="1" max="10" value="3">
+                </div>
+
+                <div class="control-group">
+                    <label>Ground Units: <span class="value-display" id="val-ground">4</span></label>
+                    <input type="range" id="num-ground" min="0" max="20" value="4">
+                </div>
+
+                <div class="control-group">
+                    <label>Water Capacity: <span class="value-display" id="val-water">20</span></label>
+                    <input type="range" id="water-capacity" min="5" max="50" value="20">
+                </div>
+
+                <div class="control-group">
+                    <label>Ground Unit Speed: <span class="value-display" id="val-ground-speed">2</span></label>
+                    <input type="range" id="ground-speed" min="1" max="5" value="2">
+                </div>
+
+                <div class="control-group">
+                    <label>Forest Density: <span class="value-display" id="val-density">40%</span></label>
+                    <input type="range" id="forest-density" min="10" max="80" value="40">
+                </div>
+
+                <div class="control-group">
+                    <label>Initial Fires: <span class="value-display" id="val-fires">5</span></label>
+                    <input type="range" id="initial-fires" min="1" max="30" value="5">
+                </div>
+
+                <div class="control-group">
+                    <label>Fire Spread Rate: <span class="value-display" id="val-spread">15%</span></label>
+                    <input type="range" id="fire-spread" min="5" max="50" value="15">
+                </div>
+
+                <div class="control-group">
+                    <label>Burn Duration: <span class="value-display" id="val-burn">50</span></label>
+                    <input type="range" id="burn-duration" min="30" max="200" value="50">
+                </div>
+
+                <div class="control-group">
+                    <label>Wind Direction:</label>
+                    <select id="wind-direction">
+                        <option value="0">No Wind</option>
+                        <option value="1">North</option>
+                        <option value="2">East</option>
+                        <option value="3">South</option>
+                        <option value="4">West</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        Auto-Start Fires:
+                        <label class="switch">
+                            <input type="checkbox" id="auto-start-fires">
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                </div>
+
+                <button class="btn-setup" onclick="setup()">🔧 SETUP</button>
+                <button class="btn-go" onclick="toggleSimulation()" id="goBtn">▶ START</button>
+            </div>
+
+            <!-- Center: Canvas -->
+            <div class="panel canvas-container">
+                <canvas id="canvas" width="700" height="700"></canvas>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #8b4513;"></div>
+                        <span>Base</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #0066ff;"></div>
+                        <span>🚁 Scouter</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff0000;"></div>
+                        <span>🚒 Ground Unit</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00ff00;"></div>
+                        <span>🌲 Healthy Tree</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff4500;"></div>
+                        <span>🔥 Burning</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffff00;"></div>
+                        <span>💧 Extinguished</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #000;"></div>
+                        <span>💀 Burned Out</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Statistics -->
+            <div class="panel">
+                <h3>📊 Statistics</h3>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Simulation Time</div>
+                    <div class="stat-value" id="stat-time">0</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">Total Trees</div>
+                    <div class="stat-value" id="stat-total-trees">0</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">Healthy Trees</div>
+                    <div class="stat-value" id="stat-healthy" style="color: #4CAF50;">0</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">Burning Trees</div>
+                    <div class="stat-value" id="stat-burning" style="color: #ff4500;">0</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">Extinguished</div>
+                    <div class="stat-value" id="stat-saved" style="color: #ffff00;">0</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">Burned Out</div>
+                    <div class="stat-value" id="stat-burned" style="color: #666;">0</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">Survival Rate</div>
+                    <div class="stat-value" id="stat-survival">100%</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">Fires Detected</div>
+                    <div class="stat-value" id="stat-fires">0</div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">Water Used</div>
+                    <div class="stat-value" id="stat-water">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let running = false;
+        let animationId = null;
+        
+        // Simulation state
+        let ticks = 0;
+        let trees = [];
+        let scouters = [];
+        let groundUnits = [];
+        let fireMarkers = [];
+        let totalTrees = 0;
+        let fireDetections = 0;
+        let waterUsed = 0;
+
+        const BASE_X = canvas.width / 2;
+        const BASE_Y = canvas.height / 2;
+
+        // Update slider values
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            const id = slider.id;
+            let valueId = 'val-';
+            
+            // Map slider IDs to their value display IDs
+            if (id === 'num-scouters') valueId += 'scouters';
+            else if (id === 'scouter-detection') valueId += 'detection';
+            else if (id === 'scouter-speed') valueId += 'scout-speed';
+            else if (id === 'num-ground') valueId += 'ground';
+            else if (id === 'water-capacity') valueId += 'water';
+            else if (id === 'ground-speed') valueId += 'ground-speed';
+            else if (id === 'forest-density') valueId += 'density';
+            else if (id === 'initial-fires') valueId += 'fires';
+            else if (id === 'fire-spread') valueId += 'spread';
+            else if (id === 'burn-duration') valueId += 'burn';
+            
+            const valueDisplay = document.getElementById(valueId);
+            
+            slider.addEventListener('input', () => {
+                let value = slider.value;
+                if (id === 'forest-density' || id === 'fire-spread') {
+                    value += '%';
+                }
+                if (valueDisplay) valueDisplay.textContent = value;
+            });
+        });
+
+        class Tree {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.state = 0; // 0=healthy, 1=burning, 2=burning-long, 3=extinguished, 4=burned-out
+                this.burnTime = 0;
+                this.maxBurnTime = 50; // Will be set from slider
+            }
+
+            update() {
+                // Get current burn duration from slider
+                this.maxBurnTime = parseInt(document.getElementById('burn-duration').value);
+                
+                if (this.state === 1 || this.state === 2) {
+                    this.burnTime++;
+                    if (this.burnTime >= this.maxBurnTime / 2 && this.state === 1) {
+                        this.state = 2;
+                    }
+                    if (this.burnTime >= this.maxBurnTime) {
+                        this.state = 4;
+                    }
+                }
+            }
+
+            draw() {
+                const colors = {
+                    0: '#00ff00',
+                    1: '#ff4500',
+                    2: '#ff0000',
+                    3: '#ffff00',
+                    4: '#000000'
+                };
+                ctx.fillStyle = colors[this.state];
+                ctx.fillRect(this.x - 3, this.y - 3, 6, 6);
+            }
+        }
+
+        class Scouter {
+            constructor() {
+                // Start scouters away from base
+                let distFromBase = 0;
+                do {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    distFromBase = Math.sqrt((this.x - BASE_X) ** 2 + (this.y - BASE_Y) ** 2);
+                } while (distFromBase < 100); // Keep at least 100px from base
+                
+                this.speed = parseInt(document.getElementById('scouter-speed').value);
+                this.detectionRadius = parseInt(document.getElementById('scouter-detection').value);
+                this.angle = Math.random() * Math.PI * 2;
+                this.targetFire = null;
+                this.patrolling = true;
+            }
+
+            update() {
+                // Detect fires within detection radius
+                trees.forEach(tree => {
+                    if ((tree.state === 1 || tree.state === 2) && this.distance(tree) < this.detectionRadius) {
+                        // Check if fire marker already exists at this location
+                        let hasMarker = fireMarkers.some(m => 
+                            Math.abs(m.x - tree.x) < 5 && Math.abs(m.y - tree.y) < 5
+                        );
+                        
+                        if (!hasMarker) {
+                            // Create new fire marker
+                            fireMarkers.push({ x: tree.x, y: tree.y, tree: tree, assigned: false });
+                            fireDetections++;
+                            
+                            // Find ONE available ground unit (not assigned and not returning to base)
+                            const availableUnit = groundUnits.find(unit => 
+                                !unit.assignedToFire && !unit.returningToBase && unit.currentWater > 0
+                            );
+                            
+                            if (availableUnit) {
+                                availableUnit.targetFire = tree;
+                                availableUnit.assignedToFire = true;
+                                // Mark fire as assigned
+                                const marker = fireMarkers.find(m => m.tree === tree);
+                                if (marker) marker.assigned = true;
+                            }
+                        }
+                        
+                        // Set this fire as target for monitoring if we don't have one
+                        if (!this.targetFire) {
+                            this.targetFire = tree;
+                            this.patrolling = false;
+                        }
+                    }
+                });
+
+                // Movement behavior
+                if (this.patrolling) {
+                    // Random patrol movement
+                    this.angle += (Math.random() - 0.5) * 0.3;
+                    this.x += Math.cos(this.angle) * this.speed;
+                    this.y += Math.sin(this.angle) * this.speed;
+
+                    // Bounce off edges
+                    if (this.x < 20 || this.x > canvas.width - 20) this.angle = Math.PI - this.angle;
+                    if (this.y < 20 || this.y > canvas.height - 20) this.angle = -this.angle;
+                } else if (this.targetFire) {
+                    // Monitor the fire (but don't extinguish it!)
+                    if (this.targetFire.state === 1 || this.targetFire.state === 2) {
+                        // Stay near the fire to monitor it
+                        const dx = this.targetFire.x - this.x;
+                        const dy = this.targetFire.y - this.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Maintain distance of ~50 pixels from fire
+                        if (dist > 60) {
+                            this.x += (dx / dist) * this.speed;
+                            this.y += (dy / dist) * this.speed;
+                        } else if (dist < 40) {
+                            this.x -= (dx / dist) * this.speed;
+                            this.y -= (dy / dist) * this.speed;
+                        }
+                    } else {
+                        // Fire is extinguished or burned out, resume patrol
+                        this.targetFire = null;
+                        this.patrolling = true;
+                    }
+                }
+            }
+
+            distance(tree) {
+                const dx = tree.x - this.x;
+                const dy = tree.y - this.y;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            draw() {
+                // Draw detection radius only when patrolling (less clutter)
+                if (this.patrolling) {
+                    ctx.strokeStyle = 'rgba(0, 102, 255, 0.1)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.detectionRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                // Draw scouter as a circle
+                ctx.fillStyle = '#0066ff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class GroundUnit {
+            constructor() {
+                this.x = BASE_X;
+                this.y = BASE_Y;
+                this.speed = parseInt(document.getElementById('ground-speed').value);
+                this.waterCapacity = parseInt(document.getElementById('water-capacity').value);
+                this.currentWater = this.waterCapacity;
+                this.targetFire = null;
+                this.returningToBase = false;
+                this.assignedToFire = false; // Track if assigned to a fire
+            }
+
+            update() {
+                // Check if out of water
+                if (this.currentWater <= 0 && !this.returningToBase) {
+                    this.returningToBase = true;
+                    this.targetFire = null;
+                    this.assignedToFire = false;
+                }
+
+                // Return to base logic
+                if (this.returningToBase) {
+                    const dx = BASE_X - this.x;
+                    const dy = BASE_Y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 10) {
+                        this.currentWater = this.waterCapacity;
+                        this.returningToBase = false;
+                        this.targetFire = null;
+                        this.assignedToFire = false;
+                    } else {
+                        this.moveWithCollision(dx / dist, dy / dist);
+                    }
+                    return;
+                }
+
+                // Validate current target - clear if no longer burning
+                if (this.targetFire && this.targetFire.state !== 1 && this.targetFire.state !== 2) {
+                    this.targetFire = null;
+                    this.assignedToFire = false;
+                }
+
+                // Move to and extinguish fire if we have a target
+                if (this.targetFire && this.assignedToFire) {
+                    // Double-check target is still burning
+                    if (this.targetFire.state === 1 || this.targetFire.state === 2) {
+                        const dx = this.targetFire.x - this.x;
+                        const dy = this.targetFire.y - this.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < 15 && this.currentWater > 0) {
+                            // Extinguish the fire
+                            this.targetFire.state = 3;
+                            this.currentWater--;
+                            waterUsed++;
+                            
+                            // Remove fire marker at this location
+                            fireMarkers = fireMarkers.filter(m => {
+                                const markerDist = Math.sqrt((m.x - this.targetFire.x) ** 2 + (m.y - this.targetFire.y) ** 2);
+                                return markerDist > 20;
+                            });
+                            
+                            // Release assignment
+                            this.targetFire = null;
+                            this.assignedToFire = false;
+                        } else if (dist > 0) {
+                            // Move toward the fire with collision avoidance
+                            this.moveWithCollision(dx / dist, dy / dist);
+                        }
+                    } else {
+                        // Target is no longer burning
+                        this.targetFire = null;
+                        this.assignedToFire = false;
+                    }
+                } else if (!this.assignedToFire) {
+                    // No assignment - return toward base slowly
+                    const dx = BASE_X - this.x;
+                    const dy = BASE_Y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist > 30) {
+                        this.moveWithCollision(dx / dist * 0.5, dy / dist * 0.5);
+                    }
+                }
+            }
+
+            moveWithCollision(dirX, dirY) {
+                const newX = this.x + dirX * this.speed;
+                const newY = this.y + dirY * this.speed;
+                
+                // Check for tree collisions
+                let blocked = false;
+                for (let tree of trees) {
+                    if (tree.state === 0 || tree.state === 1 || tree.state === 2) { // Only avoid healthy and burning trees
+                        const dist = Math.sqrt((newX - tree.x) ** 2 + (newY - tree.y) ** 2);
+                        if (dist < 10) { // Collision distance
+                            blocked = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!blocked) {
+                    this.x = newX;
+                    this.y = newY;
+                } else {
+                    // Try to go around - try perpendicular directions
+                    const altX1 = this.x + (-dirY) * this.speed;
+                    const altY1 = this.y + dirX * this.speed;
+                    
+                    let canGoAlt1 = true;
+                    for (let tree of trees) {
+                        if (tree.state === 0 || tree.state === 1 || tree.state === 2) {
+                            const dist = Math.sqrt((altX1 - tree.x) ** 2 + (altY1 - tree.y) ** 2);
+                            if (dist < 10) {
+                                canGoAlt1 = false;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (canGoAlt1) {
+                        this.x = altX1;
+                        this.y = altY1;
+                    } else {
+                        // Try other perpendicular direction
+                        const altX2 = this.x + dirY * this.speed;
+                        const altY2 = this.y + (-dirX) * this.speed;
+                        
+                        let canGoAlt2 = true;
+                        for (let tree of trees) {
+                            if (tree.state === 0 || tree.state === 1 || tree.state === 2) {
+                                const dist = Math.sqrt((altX2 - tree.x) ** 2 + (altY2 - tree.y) ** 2);
+                                if (dist < 10) {
+                                    canGoAlt2 = false;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (canGoAlt2) {
+                            this.x = altX2;
+                            this.y = altY2;
+                        }
+                        // If both perpendicular directions blocked, just don't move this tick
+                    }
+                }
+            }
+
+            distance(tree) {
+                const dx = tree.x - this.x;
+                const dy = tree.y - this.y;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            draw() {
+                ctx.fillStyle = this.currentWater > 0 ? '#ff0000' : '#ff6666';
+                ctx.fillRect(this.x - 6, this.y - 6, 12, 12);
+                
+                // Water indicator bar on the side (not underneath)
+                if (this.currentWater > 0) {
+                    ctx.fillStyle = '#0088ff';
+                    const waterPercent = this.currentWater / this.waterCapacity;
+                    const barHeight = 10;
+                    ctx.fillRect(this.x + 8, this.y - 5, 3, barHeight * waterPercent);
+                }
+                
+                // Show assignment status
+                if (this.assignedToFire && this.targetFire) {
+                    ctx.strokeStyle = '#ffff00';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(this.targetFire.x, this.targetFire.y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function setup() {
+            ticks = 0;
+            trees = [];
+            scouters = [];
+            groundUnits = [];
+            fireMarkers = [];
+            totalTrees = 0;
+            fireDetections = 0;
+            waterUsed = 0;
+
+            // Generate forest
+            const density = parseInt(document.getElementById('forest-density').value);
+            const gridSize = 20;
+            for (let x = gridSize; x < canvas.width - gridSize; x += gridSize) {
+                for (let y = gridSize; y < canvas.height - gridSize; y += gridSize) {
+                    const distFromBase = Math.sqrt((x - BASE_X) ** 2 + (y - BASE_Y) ** 2);
+                    if (Math.random() * 100 < density && distFromBase > 50) {
+                        trees.push(new Tree(x + Math.random() * 10 - 5, y + Math.random() * 10 - 5));
+                        totalTrees++;
+                    }
+                }
+            }
+
+            // Create scouters
+            const numScouters = parseInt(document.getElementById('num-scouters').value);
+            for (let i = 0; i < numScouters; i++) {
+                scouters.push(new Scouter());
+            }
+
+            // Create ground units
+            const numGround = parseInt(document.getElementById('num-ground').value);
+            for (let i = 0; i < numGround; i++) {
+                const unit = new GroundUnit();
+                // Spread them out slightly around the base so they're visible
+                unit.x = BASE_X + (Math.random() - 0.5) * 30;
+                unit.y = BASE_Y + (Math.random() - 0.5) * 30;
+                groundUnits.push(unit);
+            }
+
+            // Start initial fires
+            const initialFires = parseInt(document.getElementById('initial-fires').value);
+            const healthyTrees = trees.filter(t => t.state === 0);
+            for (let i = 0; i < Math.min(initialFires, healthyTrees.length); i++) {
+                const randomTree = healthyTrees[Math.floor(Math.random() * healthyTrees.length)];
+                randomTree.state = 1;
+            }
+
+            updateStats();
+            draw();
+        }
+
+        function spreadFire() {
+            const spreadRate = parseInt(document.getElementById('fire-spread').value);
+            trees.forEach(tree => {
+                if (tree.state === 1 || tree.state === 2) {
+                    if (Math.random() * 100 < spreadRate) {
+                        // Find nearby healthy trees
+                        trees.forEach(other => {
+                            if (other.state === 0) {
+                                const dx = tree.x - other.x;
+                                const dy = tree.y - other.y;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                if (dist < 30) {
+                                    other.state = 1;
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        function update() {
+            if (!running) return;
+
+            ticks++;
+
+            trees.forEach(tree => tree.update());
+            scouters.forEach(scouter => scouter.update());
+            groundUnits.forEach(unit => unit.update());
+
+            if (ticks % 10 === 0) {
+                spreadFire();
+            }
+
+            // Auto-start fires
+            if (document.getElementById('auto-start-fires').checked) {
+                if (Math.random() * 100 < 2) { // 2% chance per tick
+                    const healthyTrees = trees.filter(t => t.state === 0);
+                    if (healthyTrees.length > 0) {
+                        const randomTree = healthyTrees[Math.floor(Math.random() * healthyTrees.length)];
+                        randomTree.state = 1;
+                        randomTree.burnTime = 0;
+                    }
+                }
+            }
+
+            // Clean up fire markers for extinguished or burned out fires
+            fireMarkers = fireMarkers.filter(marker => {
+                if (marker.tree) {
+                    return marker.tree.state === 1 || marker.tree.state === 2;
+                }
+                return false;
+            });
+
+            updateStats();
+            draw();
+
+            animationId = requestAnimationFrame(update);
+        }
+
+        function draw() {
+            ctx.fillStyle = '#1a4d1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw base
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(BASE_X - 20, BASE_Y - 20, 40, 40);
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🏠', BASE_X, BASE_Y + 7);
+
+            // Draw trees
+            trees.forEach(tree => tree.draw());
+
+            // Draw fire markers
+            ctx.fillStyle = 'rgba(255, 140, 0, 0.5)';
+            fireMarkers.forEach(marker => {
+                ctx.beginPath();
+                ctx.arc(marker.x, marker.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw agents
+            scouters.forEach(scouter => scouter.draw());
+            groundUnits.forEach(unit => unit.draw());
+        }
+
+        function updateStats() {
+            document.getElementById('stat-time').textContent = ticks;
+            document.getElementById('stat-total-trees').textContent = totalTrees;
+            
+            const healthy = trees.filter(t => t.state === 0).length;
+            const burning = trees.filter(t => t.state === 1 || t.state === 2).length;
+            const saved = trees.filter(t => t.state === 3).length;
+            const burned = trees.filter(t => t.state === 4).length;
+            
+            document.getElementById('stat-healthy').textContent = healthy;
+            document.getElementById('stat-burning').textContent = burning;
+            document.getElementById('stat-saved').textContent = saved;
+            document.getElementById('stat-burned').textContent = burned;
+            
+            const survivalRate = totalTrees > 0 ? ((healthy + saved) / totalTrees * 100).toFixed(1) : 100;
+            document.getElementById('stat-survival').textContent = survivalRate + '%';
+            
+            document.getElementById('stat-fires').textContent = fireDetections;
+            document.getElementById('stat-water').textContent = waterUsed;
+        }
+
+        function toggleSimulation() {
+            running = !running;
+            const btn = document.getElementById('goBtn');
+            if (running) {
+                btn.textContent = '⏸ PAUSE';
+                btn.classList.remove('btn-go');
+                btn.classList.add('btn-stop');
+                update();
+            } else {
+                btn.textContent = '▶ START';
+                btn.classList.remove('btn-stop');
+                btn.classList.add('btn-go');
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+            }
+        }
+
+        // Initialize
+        setup();
+    </script>
+</body>
+</html>
