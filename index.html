@@ -264,28 +264,28 @@
                 <h3>🎮 Setup Controls</h3>
                 
                 <div class="control-group">
-                    <label>Scouters: <span class="value-display" id="val-scouters">6</span></label>
-                    <input type="range" id="num-scouters" min="0" max="20" value="6">
+                    <label>Scouters: <span class="value-display" id="val-scouters">8</span></label>
+                    <input type="range" id="num-scouters" min="0" max="20" value="8">
                 </div>
 
                 <div class="control-group">
-                    <label>Scouter Detection Radius: <span class="value-display" id="val-detection">60</span></label>
-                    <input type="range" id="scouter-detection" min="20" max="150" value="60">
+                    <label>Scouter Detection Radius: <span class="value-display" id="val-detection">80</span></label>
+                    <input type="range" id="scouter-detection" min="20" max="150" value="80">
                 </div>
 
                 <div class="control-group">
-                    <label>Scouter Speed: <span class="value-display" id="val-scout-speed">3</span></label>
-                    <input type="range" id="scouter-speed" min="1" max="10" value="3">
+                    <label>Scouter Speed: <span class="value-display" id="val-scout-speed">4</span></label>
+                    <input type="range" id="scouter-speed" min="1" max="10" value="4">
                 </div>
 
                 <div class="control-group">
-                    <label>Ground Units: <span class="value-display" id="val-ground">4</span></label>
-                    <input type="range" id="num-ground" min="0" max="20" value="4">
+                    <label>Ground Units: <span class="value-display" id="val-ground">6</span></label>
+                    <input type="range" id="num-ground" min="0" max="20" value="6">
                 </div>
 
                 <div class="control-group">
-                    <label>Water Capacity: <span class="value-display" id="val-water">20</span></label>
-                    <input type="range" id="water-capacity" min="5" max="50" value="20">
+                    <label>Water Capacity: <span class="value-display" id="val-water">25</span></label>
+                    <input type="range" id="water-capacity" min="5" max="50" value="25">
                 </div>
 
                 <div class="control-group">
@@ -294,23 +294,23 @@
                 </div>
 
                 <div class="control-group">
-                    <label>Forest Density: <span class="value-display" id="val-density">40%</span></label>
-                    <input type="range" id="forest-density" min="10" max="80" value="40">
+                    <label>Forest Density: <span class="value-display" id="val-density">50%</span></label>
+                    <input type="range" id="forest-density" min="10" max="80" value="50">
                 </div>
 
                 <div class="control-group">
-                    <label>Initial Fires: <span class="value-display" id="val-fires">5</span></label>
-                    <input type="range" id="initial-fires" min="1" max="30" value="5">
+                    <label>Initial Fires: <span class="value-display" id="val-fires">3</span></label>
+                    <input type="range" id="initial-fires" min="1" max="30" value="3">
                 </div>
 
                 <div class="control-group">
-                    <label>Fire Spread Rate: <span class="value-display" id="val-spread">15%</span></label>
-                    <input type="range" id="fire-spread" min="5" max="50" value="15">
+                    <label>Fire Spread Rate: <span class="value-display" id="val-spread">8%</span></label>
+                    <input type="range" id="fire-spread" min="5" max="50" value="8">
                 </div>
 
                 <div class="control-group">
-                    <label>Burn Duration: <span class="value-display" id="val-burn">50</span></label>
-                    <input type="range" id="burn-duration" min="30" max="200" value="50">
+                    <label>Burn Duration: <span class="value-display" id="val-burn">80</span></label>
+                    <input type="range" id="burn-duration" min="30" max="200" value="80">
                 </div>
 
                 <div class="control-group">
@@ -328,7 +328,7 @@
                     <label style="display: flex; align-items: center; gap: 10px;">
                         Auto-Start Fires:
                         <label class="switch">
-                            <input type="checkbox" id="auto-start-fires">
+                            <input type="checkbox" id="auto-start-fires" checked>
                             <span class="slider"></span>
                         </label>
                     </label>
@@ -479,7 +479,7 @@
                 this.y = y;
                 this.state = 0; // 0=healthy, 1=burning, 2=burning-long, 3=extinguished, 4=burned-out
                 this.burnTime = 0;
-                this.maxBurnTime = 50; // Will be set from slider
+                this.maxBurnTime = 80; // Will be set from slider
             }
 
             update() {
