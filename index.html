@@ -24,6 +24,7 @@
         }
 
         header {
+            position: relative;
             text-align: center;
             padding: 30px;
             background: linear-gradient(135deg, #ff4500, #ff8c00);
@@ -35,6 +36,29 @@
         h1 {
             font-size: 2.5em;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .info-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
         }
 
         .main-grid {
@@ -244,6 +268,81 @@
             font-size: 1.3em;
         }
 
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 2px solid #ff8c00;
+            box-shadow: 0 10px 30px rgba(255, 140, 0, 0.3);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close:hover {
+            color: #ff4500;
+        }
+
+        .modal-section {
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #ff4500;
+        }
+
+        .modal-section h3 {
+            color: #ff8c00;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .modal-section p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .scenario-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .scenario-list li {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(255, 140, 0, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #ff8c00;
+        }
+
+        .scenario-list strong {
+            color: #ff8c00;
+        }
+
         @media (max-width: 1400px) {
             .main-grid {
                 grid-template-columns: 1fr;
@@ -256,6 +355,7 @@
         <header>
             <h1>🚒 Wildfire Firefighting Simulation 🔥</h1>
             <p>Interactive Multi-Agent Forest Fire Suppression System</p>
+            <button class="info-button" onclick="openModal()">ℹ️</button>
         </header>
 
         <div class="main-grid">
@@ -425,9 +525,100 @@
         </div>
     </div>
 
+    <!-- Information Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 style="color: #ff8c00; text-align: center; margin-bottom: 30px;">🌲 Wildfire Firefighting Simulation Guide 🔥</h2>
+            
+            <div class="modal-section">
+                <h3>🎯 What is this Simulation?</h3>
+                <p>This is an interactive multi-agent system simulation that models wildfire detection and suppression. Watch as autonomous agents work together to detect fires, coordinate responses, and protect the forest ecosystem.</p>
+                <p>The simulation demonstrates real-world concepts in emergency response, resource management, and distributed systems coordination.</p>
+            </div>
+
+            <div class="modal-section">
+                <h3>🤖 Understanding Agents</h3>
+                <p><strong>Scouters (🚁 Blue Circles):</strong> These are your detection agents. They patrol the forest, identify fires within their detection radius, and create fire markers. They coordinate with ground units but don't extinguish fires themselves.</p>
+                <p><strong>Ground Units (🚒 Red Squares):</strong> These are your firefighting agents. They respond to fire markers, navigate to the location, and extinguish fires using their limited water supply. When out of water, they return to base to refill.</p>
+                <p><strong>Key Agent Behaviors:</strong></p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>• Autonomous decision-making</li>
+                    <li>• Resource management (water, detection range)</li>
+                    <li>• Collision avoidance with trees</li>
+                    <li>• Coordination between agent types</li>
+                    <li>• Pathfinding and navigation</li>
+                </ul>
+            </div>
+
+            <div class="modal-section">
+                <h3>🎓 Educational Purpose</h3>
+                <p>This simulation helps understand:</p>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>• <strong>Multi-Agent Systems:</strong> How independent agents can work together without central control</li>
+                    <li>• <strong>Emergency Response Coordination:</strong> Real-world firefighting strategies and challenges</li>
+                    <li>• <strong>Resource Optimization:</strong> Balancing detection capabilities with firefighting capacity</li>
+                    <li>• <strong>System Dynamics:</strong> How small changes in parameters affect overall outcomes</li>
+                    <li>• <strong>Complex Problem Solving:</strong> Managing multiple variables in a dynamic environment</li>
+                </ul>
+            </div>
+
+            <div class="modal-section">
+                <h3>🎮 Scenarios to Try</h3>
+                <p>Experiment with these scenarios to understand different aspects of the system:</p>
+                <ul class="scenario-list">
+                    <li>
+                        <strong>🔥 The Slow Burn:</strong> Low fire spread (5%), many scouters (10+), few ground units (2). 
+                        <em>Observe how early detection can prevent major outbreaks.</em>
+                    </li>
+                    <li>
+                        <strong>🚒 Firefighter Overload:</strong> High initial fires (15+), limited ground units (3), normal water capacity.
+                        <em>Watch how resource limitations affect containment.</em>
+                    </li>
+                    <li>
+                        <strong>🌪️ Rapid Spread Crisis:</strong> High fire spread (25%+), windy conditions, auto-fires enabled.
+                        <em>Test your system's limits under extreme conditions.</em>
+                    </li>
+                    <li>
+                        <strong>🔍 Detection Challenge:</strong> Low scouter detection radius (30), normal everything else.
+                        <em>See how detection capabilities impact response time.</em>
+                    </li>
+                    <li>
+                        <strong>💧 Resource Management:</strong> Low water capacity (10), many ground units (8+).
+                        <em>Observe the logistics of constant refilling.</em>
+                    </li>
+                    <li>
+                        <strong>🌲 Dense Forest:</strong> High forest density (70%+), normal fire spread.
+                        <em>Watch how fire spreads differently in dense areas.</em>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="modal-section">
+                <h3>📈 Reading the Statistics</h3>
+                <p><strong>Survival Rate:</strong> The percentage of trees that are either healthy or successfully extinguished. Aim to keep this high!</p>
+                <p><strong>Fires Detected:</strong> How many fires your scouters have identified. Higher is better for early response.</p>
+                <p><strong>Water Used:</strong> Tracks resource consumption and efficiency of your ground units.</p>
+                <p><strong>Key Metrics to Watch:</strong> Burning trees (should be low), Survival rate (should be high), Response time between detection and extinguishing.</p>
+            </div>
+
+            <div class="modal-section">
+                <h3>💡 Pro Tips</h3>
+                <ul style="padding-left: 20px; margin: 10px 0;">
+                    <li>• Balance your resources - too many scouters without enough firefighters wastes detection</li>
+                    <li• Watch for "traffic jams" - ground units can get blocked by trees or each other</li>
+                    <li>• Use the "Auto-Start Fires" to test your system's sustainability</li>
+                    <li>• Experiment with wind direction to see how it affects fire spread patterns</li>
+                    <li>• The burn duration gives you a time window to respond - use it wisely!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const modal = document.getElementById('infoModal');
         
         let running = false;
         let animationId = null;
@@ -444,6 +635,22 @@
 
         const BASE_X = canvas.width / 2;
         const BASE_Y = canvas.height / 2;
+
+        // Modal functions
+        function openModal() {
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
 
         // Update slider values
         document.querySelectorAll('input[type="range"]').forEach(slider => {
