@@ -81,7 +81,3 @@ The simulation tracks:
 ## Author
 
 Ioannis Karkalas
-
-## License
-
-[Your chosen license - e.g., MIT]
